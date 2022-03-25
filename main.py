@@ -51,20 +51,16 @@ def check_process():
         print('检测到QQ程序未存在,正在尝试启动')
 
 
-def start_info():
-    """启动QQ资料卡"""
+if __name__ == '__main__':
     with open('qq.txt', 'r') as file:
         qq_numbers = file.read().split('\n')
-    for qq_number in qq_numbers:
-        print(qq_number)
-        webbrowser.open(f"tencent://ContactInfo/?subcmd=ViewInfo&puin=0&uin={qq_number}")
-        time.sleep(0.2)
-
-
-if __name__ == '__main__':
-    start_info()
-    print('打开完成')
-    # 运行两次,防止第一次打开时没有获取到句柄
-    for _ in range(2):
-        for i in get_hwnd():
-            on_click(i)
+    while qq_numbers:
+        for i in range(10):
+            qq_number = qq_numbers.pop()
+            print(qq_number)
+            webbrowser.open(f"tencent://ContactInfo/?subcmd=ViewInfo&puin=0&uin={qq_number}")
+            time.sleep(0.2)
+        # 运行两次,防止第一次打开时没有获取到句柄
+        for _ in range(2):
+            for i in get_hwnd():
+                on_click(i)
