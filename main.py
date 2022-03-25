@@ -1,11 +1,14 @@
+# _*_ coding:utf-8 _*_
+
+import os
 import time
 import webbrowser
-import win32gui
+import winreg
+
+import psutil
 import win32api
 import win32con
-
-
-# webbrowser.open("tencent://ContactInfo/?subcmd=ViewInfo&puin=0&uin=3036446123")
+import win32gui
 
 
 def get_hwnd(name='的资料'):
@@ -26,19 +29,42 @@ def get_hwnd(name='的资料'):
 
 def on_click(hwnd):
     """点击QQ名片赞按钮"""
-    # 点赞按钮位置
     like_position = win32api.MAKELONG(330, 340)
-    # 关闭按钮位置
     close_position = win32api.MAKELONG(710, 20)
     for _ in range(11):
         # 点11次赞,防止漏点
         win32api.SendMessage(hwnd, win32con.WM_LBUTTONDOWN, win32con.MK_LBUTTON, like_position)
         win32api.SendMessage(hwnd, win32con.WM_LBUTTONUP, win32con.MK_LBUTTON, like_position)
-        time.sleep(0.1)
+        time.sleep(0.3)
     # 点击关闭按钮
     win32api.SendMessage(hwnd, win32con.WM_LBUTTONDOWN, win32con.MK_LBUTTON, close_position)
     win32api.SendMessage(hwnd, win32con.WM_LBUTTONUP, win32con.MK_LBUTTON, close_position)
 
 
-for i in get_hwnd():
-    on_click(i)
+def check_process():
+    """检测QQ进程是否存在,不存在则尝试启动"""
+    names = [psutil.Process(pid).name() for pid in psutil.pids()]
+    if 'QQ.exe' not in names:
+        key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, r'SOFTWARE\WOW6432Node\Tencent\QQ2009')
+        qq_file = winreg.QueryValueEx(key, 'Install')[0] + r'\Bin\QQ.exe'
+        os.startfile(qq_file)
+        print('检测到QQ程序未存在,正在尝试启动')
+
+
+def start_info():
+    """启动QQ资料卡"""
+    with open('qq.txt', 'r') as file:
+        qq_numbers = file.read().split('\n')
+    for qq_number in qq_numbers:
+        print(qq_number)
+        webbrowser.open(f"tencent://ContactInfo/?subcmd=ViewInfo&puin=0&uin={qq_number}")
+        time.sleep(0.2)
+
+
+if __name__ == '__main__':
+    start_info()
+    print('打开完成')
+    # 运行两次,防止第一次打开时没有获取到句柄
+    for _ in range(2):
+        for i in get_hwnd():
+            on_click(i)
